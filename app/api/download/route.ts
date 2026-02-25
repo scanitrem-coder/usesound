@@ -87,9 +87,9 @@ export async function GET(request: Request) {
       }
 
       // записываем, что пользователь скачал этот трек
-      const { error: insertLogError } = await supabaseUser
-        .from("download_logs")
-        .insert({ user_id: user.id, track_id: trackId });
+      const { error: insertLogError } = await supabaseAdmin
+      .from("download_logs")
+      .insert({ user_id: user.id, track_id: trackId });
 
       if (insertLogError) {
         return NextResponse.json({ error: "Failed to save download history" }, { status: 500 });
