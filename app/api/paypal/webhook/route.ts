@@ -19,12 +19,20 @@ export async function POST(req: Request) {
       return new NextResponse("Missing PayPal headers", { status: 400 });
     }
 
-    // 1️⃣ Verify signature
-    const isValid = await verifyPaypalSignature(rawBody, headerList);
-    if (!isValid) return new NextResponse("Invalid signature", { status: 400 });
+    // 1️⃣ Verify signature (skip in sandbox)
+const isSandbox = process.env.PAYPAL_MODE === "sandbox";
 
-    const event = JSON.parse(rawBody);
-    console.log("Event type:", event.event_type);
+if (!isSandbox) {
+  const isValid = await verifyPaypalSignature(rawBody, headerList);
+  if (!isValid) {
+    return new NextResponse("Invalid signature", { status: 400 });
+  }
+} else {
+  console.log("Sandbox mode — skipping signature verification");
+}
+
+const event = JSON.parse(rawBody);
+console.log("Event type:", event.event_type);
 
     // 2️⃣ Idempotency check
     const eventId = event.id;
