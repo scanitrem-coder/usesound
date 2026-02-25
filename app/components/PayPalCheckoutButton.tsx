@@ -75,7 +75,10 @@ export default function PayPalCheckoutButton({
 
         onApprove={async (data, actions) => {
   await actions.order?.capture();
-  window.location.reload();
+
+  setTimeout(() => {
+    window.location.reload();
+  }, 1500);
 }}
 
         onError={(err) => {
