@@ -60,42 +60,33 @@ export async function GET(request: Request) {
 
     const alreadyDownloaded = !!existingLog;
 
-    // 3) Если НЕ скачивал — тогда проверяем баланс и списываем
-    if (!alreadyDownloaded) {
-      const { data: profile, error: profileError } = await supabaseUser
-        .from("profiles")
-        .select("downloads_balance")
-        .eq("id", user.id)
-        .single();
+    // 3) Если НЕ скачивал — тогда списываем через атомарную функцию
+if (!alreadyDownloaded) {
+  const { error: purchaseError } = await supabaseAdmin.rpc(
+    "purchase_track",
+    {
+      user_id_param: user.id,
+      track_id_param: trackId,
+    }
+  );
 
-      if (profileError || !profile) {
-        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-      }
-
-      if (profile.downloads_balance <= 0) {
-        return NextResponse.json({ error: "No credits left" }, { status: 403 });
-      }
-
-      // списываем 1 кредит
-      const { error: decrementError } = await supabaseAdmin.rpc("decrement_download_balance", {
-        user_id_param: user.id,
-        count_param: 1,
-      });
-
-      if (decrementError) {
-        return NextResponse.json({ error: "Failed to decrement balance" }, { status: 500 });
-      }
-
-      // записываем, что пользователь скачал этот трек
-      const { error: insertLogError } = await supabaseAdmin
-      .from("download_logs")
-      .insert({ user_id: user.id, track_id: trackId });
-
-      if (insertLogError) {
-        return NextResponse.json({ error: "Failed to save download history" }, { status: 500 });
-      }
+  if (purchaseError) {
+    // Если функция выбросила ошибку "No credits left"
+    if (purchaseError.message.includes("No credits left")) {
+      return NextResponse.json(
+        { error: "No credits left" },
+        { status: 403 }
+      );
     }
 
+    console.error("Purchase RPC error:", purchaseError);
+
+    return NextResponse.json(
+      { error: "Failed to process download" },
+      { status: 500 }
+    );
+  }
+}
     // 4) Готовим правильный Key для R2
     let key = track.full_url;
 
