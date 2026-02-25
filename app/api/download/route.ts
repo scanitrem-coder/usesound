@@ -114,7 +114,10 @@ export async function GET(request: Request) {
 
     const signedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
 
-    return NextResponse.json({ url: signedUrl });
+    return NextResponse.json({
+  url: signedUrl,
+  alreadyDownloaded,
+});
   } catch (err) {
     console.error("DOWNLOAD ERROR:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

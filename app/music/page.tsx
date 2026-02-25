@@ -16,6 +16,7 @@ type Track = {
 };
 
 export default function MusicPage() {
+  const [downloadedTracks, setDownloadedTracks] = useState<string[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [moods, setMoods] = useState<string[]>([]);
   const [instrumentGroups, setInstrumentGroups] = useState<string[]>([]);
@@ -178,9 +179,9 @@ const handleDownload = async (trackId: string) => {
   } = await supabase.auth.getSession();
 
   if (!session) {
-  setShowLoginModal(true);
-  return;
-}
+    setShowLoginModal(true);
+    return;
+  }
 
   const res = await fetch(`/api/download?trackId=${trackId}`, {
     headers: {
@@ -190,11 +191,25 @@ const handleDownload = async (trackId: string) => {
 
   const data = await res.json();
 
-  if (data.url) {
-    window.location.href = data.url;
-  } else {
+  if (!res.ok) {
     alert(data.error || "Download failed");
+    return;
   }
+
+  const { url, alreadyDownloaded } = data;
+
+  // если это первое скачивание — запоминаем
+  if (!alreadyDownloaded) {
+    setDownloadedTracks(prev => [...prev, trackId]);
+  }
+
+  // скачивание без перехода на страницу
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 };
 const handleInlineLogin = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -488,7 +503,11 @@ const handleInlineLogin = async (e: React.FormEvent) => {
   }}
   className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 rounded-lg transition"
 >
-  {canDownload ? "Download" : "Kaufen"}
+  {canDownload
+  ? downloadedTracks.includes(track.id)
+    ? "Re-download"
+    : "Download"
+  : "Kaufen"}
 </button>
 
 
