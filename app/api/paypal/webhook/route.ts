@@ -104,6 +104,23 @@ console.log("Event type:", event.event_type);
       }
 
       const { user_id, package_id } = payment.data;
+      // 🔐 Проверяем custom_id из PayPal
+const customId =
+  event.resource.purchase_units?.[0]?.custom_id;
+
+if (!customId) {
+  return NextResponse.json(
+    { error: "Missing custom_id" },
+    { status: 400 }
+  );
+}
+
+if (customId !== user_id) {
+  return NextResponse.json(
+    { error: "User mismatch" },
+    { status: 400 }
+  );
+}
 
       // 2. Fetch package to know how many downloads to add
       const pkg = await supabase
