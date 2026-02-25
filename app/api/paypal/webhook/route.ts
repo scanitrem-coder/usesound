@@ -91,6 +91,18 @@ console.log("Event type:", event.event_type);
     // ======================================================================================
     if (event.event_type === "PAYMENT.CAPTURE.COMPLETED") {
       const captureId = capture?.id;
+// 🔒 Extra idempotency: check if capture already processed
+const existingCapture = await supabase
+  .from("payments")
+  .select("provider_capture_id")
+  .eq("provider_capture_id", captureId)
+  .maybeSingle();
+
+if (existingCapture.data) {
+  console.log("Capture already processed");
+  return NextResponse.json({ ok: true, duplicated_capture: true });
+}
+
 
       // 1. Fetch payment
       const payment = await supabase
