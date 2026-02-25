@@ -75,7 +75,6 @@ export default function PayPalCheckoutButton({
 
         onApprove={async (data, actions) => {
   await actions.order?.capture();
-
   setTimeout(() => {
     window.location.reload();
   }, 1500);
