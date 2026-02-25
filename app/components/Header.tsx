@@ -3,10 +3,31 @@
 import Link from "next/link";
 import { useAuth } from "../providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
 
 export default function Header() {
   const { user, openLogin } = useAuth();
+  const [balance, setBalance] = useState<number | null>(null);
+useEffect(() => {
+  if (!user) {
+    setBalance(null);
+    return;
+  }
 
+  const fetchBalance = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("downloads_balance")
+      .eq("id", user.id)
+      .single();
+
+    if (!error && data) {
+      setBalance(data.downloads_balance);
+    }
+  };
+
+  fetchBalance();
+}, [user]);
 
 const handleLogout = async () => {
   await supabase.auth.signOut();
@@ -53,8 +74,13 @@ const handleLogout = async () => {
   <div className="flex items-center gap-3 ml-4">
     
     <div className="px-3 py-1 bg-zinc-800 border border-zinc-700 rounded-full text-xs text-emerald-400">
-      {user.email}
-    </div>
+  {user.email}
+  {balance !== null && (
+    <span className="ml-2 text-white/60">
+      • {balance} downloads
+    </span>
+  )}
+</div>
 
     <button
       onClick={handleLogout}

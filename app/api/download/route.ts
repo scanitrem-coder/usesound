@@ -46,34 +46,32 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Invalid user" }, { status: 401 });
     }
 
-    // Проверяем покупку
-    const { data: purchase, error: purchaseError } = await supabaseUser
-  .from("purchases")
-  .select("*")
-  .eq("user_id", user.id)
-  .eq("track_id", trackId)
-  .limit(1)
-  .maybeSingle();
+    // 🔹 Проверяем баланс пользователя
+const { data: profile, error: profileError } = await supabaseUser
+  .from("profiles")
+  .select("downloads_balance")
+  .eq("id", user.id)
+  .single();
 
+if (profileError || !profile) {
+  return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+}
 
-    if (purchaseError || !purchase) {
-      return NextResponse.json({ error: "Purchase not found" }, { status: 403 });
-    }
+if (profile.downloads_balance <= 0) {
+  return NextResponse.json({ error: "No credits left" }, { status: 403 });
+}
 
-    if (purchase.downloads_remaining <= 0) {
-      return NextResponse.json({ error: "No downloads remaining" }, { status: 403 });
-    }
+// 🔹 Списываем 1 кредит атомарно
+const { error: decrementError } = await supabaseUser.rpc(
+  "decrement_download_balance",
+  {
+    user_id_param: user.id,
+    count_param: 1,
+  }
+);
 
-    // Уменьшаем лимит
-    const { error: updateError } = await supabaseUser
-      .from("purchases")
-      .update({
-        downloads_remaining: purchase.downloads_remaining - 1,
-      })
-      .eq("id", purchase.id);
-
-    if (updateError) {
-  return NextResponse.json({ error: "Failed to update downloads" }, { status: 500 });
+if (decrementError) {
+  return NextResponse.json({ error: "Failed to decrement balance" }, { status: 500 });
 }
 
 // 🔹 Получаем трек
@@ -89,8 +87,6 @@ console.log("FULL URL VALUE:", track?.full_url);
 console.log("R2 BUCKET:", process.env.R2_BUCKET);
 console.log("ACCOUNT ID:", process.env.R2_ACCOUNT_ID);
 console.log("ACCESS KEY:", process.env.R2_ACCESS_KEY);
-
-
 
 if (trackError || !track) {
   return NextResponse.json({ error: "Track not found" }, { status: 404 });
