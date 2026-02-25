@@ -105,7 +105,7 @@ export async function GET(request: Request) {
 
     // Если нет папки — не добавляем "tracks/" насильно, потому что у тебя есть "full/..."
     key = decodeURIComponent(key);
-
+    console.log("R2 KEY USED:", key);
     const command = new GetObjectCommand({
       Bucket: process.env.R2_BUCKET!,
       Key: key,
