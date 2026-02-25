@@ -112,7 +112,7 @@ export async function GET(request: Request) {
       ResponseContentDisposition: "attachment",
     });
 
-    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
 
     return NextResponse.json({ url: signedUrl });
   } catch (err) {
