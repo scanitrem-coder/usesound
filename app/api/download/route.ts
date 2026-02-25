@@ -3,9 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "@/lib/r2";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(request: Request) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { searchParams } = new URL(request.url);
     const trackId = searchParams.get("trackId");
 
@@ -75,7 +77,7 @@ export async function GET(request: Request) {
       }
 
       // списываем 1 кредит
-      const { error: decrementError } = await supabaseUser.rpc("decrement_download_balance", {
+      const { error: decrementError } = await supabaseAdmin.rpc("decrement_download_balance", {
         user_id_param: user.id,
         count_param: 1,
       });
