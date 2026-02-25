@@ -466,11 +466,7 @@ const handleInlineLogin = async (e: React.FormEvent) => {
               {track.title}
             </h3>
             
-            <p className="text-xs text-red-400">
-              Track ID: {track.id}
-            </p>
-
-
+            
             <p className="text-sm text-zinc-400 mb-4 flex gap-6">
   <span>BPM: {track.bpm}</span>
   {track.duration && (
