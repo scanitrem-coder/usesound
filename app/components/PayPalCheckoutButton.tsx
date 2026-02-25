@@ -74,10 +74,9 @@ export default function PayPalCheckoutButton({
         }}
 
         onApprove={async (data, actions) => {
-          const capture = await actions.order?.capture();
-          console.log("Payment captured:", capture);
-          alert("Zahlung erfolgreich!");
-        }}
+  await actions.order?.capture();
+  window.location.reload();
+}}
 
         onError={(err) => {
           console.error("PayPal Error:", err);
