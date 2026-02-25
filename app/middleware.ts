@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const RATE_LIMIT = 20; // максимум 20 запросов
-const WINDOW_MS = 60 * 1000; // за 1 минуту
+const WINDOW_MS = 60 * 1000; // 1 минута
 
-// В памяти храним IP → количество запросов
-const ipMap = new Map<
+// Храним счетчик в памяти
+const requestStore = new Map<
   string,
   { count: number; startTime: number }
 >();
@@ -13,22 +13,20 @@ const ipMap = new Map<
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Ограничиваем только нужные API
-  if (
-    pathname.startsWith("/api/download") ||
-    pathname.startsWith("/api/purchase")
-  ) {
-    const ip = req.ip ?? "anonymous";
-    const now = Date.now();
+  // Ограничиваем только download API
+  if (pathname.startsWith("/api/download")) {
+    // В dev режиме проще использовать фиксированный ключ
+    const key = "download-rate-limit";
 
-    const record = ipMap.get(ip);
+    const now = Date.now();
+    const record = requestStore.get(key);
 
     if (!record) {
-      ipMap.set(ip, { count: 1, startTime: now });
+      requestStore.set(key, { count: 1, startTime: now });
     } else {
       if (now - record.startTime > WINDOW_MS) {
         // прошло больше минуты → сбрасываем
-        ipMap.set(ip, { count: 1, startTime: now });
+        requestStore.set(key, { count: 1, startTime: now });
       } else {
         record.count++;
 
