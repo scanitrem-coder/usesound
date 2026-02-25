@@ -198,10 +198,14 @@ const handleDownload = async (trackId: string) => {
 
   const { url, alreadyDownloaded } = data;
 
-  // если это первое скачивание — запоминаем
-  if (!alreadyDownloaded) {
-    setDownloadedTracks(prev => [...prev, trackId]);
-  }
+  // если сервер говорит, что уже скачан — тоже отмечаем
+if (alreadyDownloaded) {
+  setDownloadedTracks(prev =>
+    prev.includes(trackId) ? prev : [...prev, trackId]
+  );
+} else {
+  setDownloadedTracks(prev => [...prev, trackId]);
+}
 
   // скачивание без перехода на страницу
   const a = document.createElement("a");
