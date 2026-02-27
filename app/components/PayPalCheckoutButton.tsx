@@ -73,8 +73,25 @@ export default function PayPalCheckoutButton({
           return data.orderID;
         }}
 
-        onApprove={async (data, actions) => {
-  await actions.order?.capture();
+        onApprove={async (data) => {
+  const res = await fetch("/api/paypal/capture-order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      orderID: data.orderID,
+    }),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    console.error("Capture error:", result);
+    alert("Zahlung fehlgeschlagen.");
+    return;
+  }
+
   setTimeout(() => {
     window.location.reload();
   }, 1500);
