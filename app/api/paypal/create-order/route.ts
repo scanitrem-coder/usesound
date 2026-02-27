@@ -88,18 +88,27 @@ export async function POST(req: Request) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
+       
+       
         body: JSON.stringify({
-          intent: "CAPTURE",
-          purchase_units: [
-  {
-    custom_id: user.id,
-    amount: {
-      currency_code: "EUR",
-      value: Number(pkg.price_eur).toFixed(2),
+  intent: "CAPTURE",
+  purchase_units: [
+    {
+      custom_id: user.id,
+      amount: {
+        currency_code: "EUR",
+        value: Number(pkg.price_eur).toFixed(2),
+      },
     },
+  ],
+  application_context: {
+    return_url: "https://usesound.vercel.app/pricing",
+    cancel_url: "https://usesound.vercel.app/pricing",
+    user_action: "PAY_NOW",
   },
-],
-        }),
+}),
+
+
       }
     );
 
