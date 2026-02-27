@@ -74,6 +74,8 @@ export default function PayPalCheckoutButton({
         }}
 
         onApprove={async (data) => {
+  console.log("ON APPROVE TRIGGERED", data);
+
   const res = await fetch("/api/paypal/capture-order", {
     method: "POST",
     headers: {
@@ -85,16 +87,14 @@ export default function PayPalCheckoutButton({
   });
 
   const result = await res.json();
+  console.log("CAPTURE RESULT:", result);
 
   if (!res.ok) {
-    console.error("Capture error:", result);
-    alert("Zahlung fehlgeschlagen.");
+    alert("Capture failed");
     return;
   }
 
-  setTimeout(() => {
-    window.location.reload();
-  }, 1500);
+  window.location.reload();
 }}
 
         onError={(err) => {
