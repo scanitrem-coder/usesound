@@ -1,21 +1,23 @@
 // lib/paypal.ts
 
+const PAYPAL_BASE_URL =
+  process.env.PAYPAL_MODE === "live"
+    ? "https://api-m.paypal.com"
+    : "https://api-m.sandbox.paypal.com";
+
 export async function getPaypalAccessToken() {
   const auth = Buffer.from(
     `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_SECRET}`
   ).toString("base64");
 
-  const res = await fetch(
-    "https://api-m.sandbox.paypal.com/v1/oauth2/token",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: "grant_type=client_credentials",
-    }
-  );
+  const res = await fetch(`${PAYPAL_BASE_URL}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials",
+  });
 
   if (!res.ok) {
     throw new Error("Failed to get PayPal access token");
@@ -25,10 +27,7 @@ export async function getPaypalAccessToken() {
   return data.access_token;
 }
 
-export async function verifyPaypalSignature(
-  rawBody: string,
-  headerList: Headers
-) {
+export async function verifyPaypalSignature(rawBody: string, headerList: Headers) {
   const accessToken = await getPaypalAccessToken();
 
   const payload = {
@@ -42,7 +41,7 @@ export async function verifyPaypalSignature(
   };
 
   const res = await fetch(
-    "https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature",
+    `${PAYPAL_BASE_URL}/v1/notifications/verify-webhook-signature`,
     {
       method: "POST",
       headers: {
